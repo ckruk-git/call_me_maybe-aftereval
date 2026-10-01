@@ -13,7 +13,7 @@ clean:
 	find . -type d -name ".pytest_cache" -exec rm -rf {} +
 
 lint:
-	flake8 . 
+	flake8 src
 	mypy . --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
 lint-strict:
 	flake8 .

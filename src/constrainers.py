@@ -1,11 +1,18 @@
-from .utils import get_current_parameter, left_parameters, nbr_left_parameters
-from .model import model, get_masked_logits, FunctionDefinition, ParameterDefinition
+from .utils import get_current_parameter, left_parameters
+from .model import model, get_masked_logits, FunctionDefinition
 import re
+from .finder import output_state
 
-def constrainer(output: str, logits: list[float], function: FunctionDefinition, prompt: str):
+
+def constrainer(
+    output: str,
+    logits: list[float],
+    function: FunctionDefinition,
+    prompt: str,
+        ) -> list[float]:
     state = output_state(output, function)
     print("STATE:", state)
-    tokens = []  
+    tokens = []
     if state == "start":
         tokens.append(model.encode('{')[0].tolist()[0])
         return get_masked_logits(logits, tokens)
@@ -28,18 +35,19 @@ def constrainer(output: str, logits: list[float], function: FunctionDefinition, 
     if state == "value":
         return value_constrainer(function, logits, prompt, output)
 
-from .finder import output_state
 
-def ints_constrained(logits: list[float],
-    prompt: str,
-    output: str,
-    function: FunctionDefinition,
-) -> list[float]:
+def ints_constrained(
+        logits: list[float],
+        prompt: str,
+        output: str,
+        function: FunctionDefinition,
+        ) -> list[float]:
     tokens = []
     res = output.split(":", 1)[0]
     prompt = prompt.split()
     allowed = ['}']
-    if get_current_parameter(output, function) != list(function.parameters.keys())[-1]:
+    current_parameter = get_current_parameter(output, function)
+    if current_parameter != list(function.parameters.keys())[-1]:
         allowed.extend(",")
     for i in prompt:
         numbers = re.findall(r'\d+', i)
@@ -61,7 +69,7 @@ def floats_constrained(logits: list[float], prompt: str) -> list[float]:
     for i in allowed:
         tokens.append(model.encode(i)[0].tolist()[0])
     for i in prompt:
-        tokens.extend(model.encode(i)[0].tolist())    
+        tokens.extend(model.encode(i)[0].tolist())
     return get_masked_logits(logits, tokens)
 
 
@@ -72,11 +80,13 @@ def bool_constrained(logits: list[float]) -> list[float]:
         tokens.append(model.encode(i)[0].tolist()[0])
     return get_masked_logits(logits, tokens)
 
-def string_constrained(logits: list[float],
-    prompt: str,
-    output: str,
-    function: FunctionDefinition,
-) -> list[float]:
+
+def string_constrained(
+        logits: list[float],
+        prompt: str,
+        output: str,
+        function: FunctionDefinition,
+        ) -> list[float]:
     current_parameter = get_current_parameter(output, function)
     tokens = []
     res = output.rsplit(":", 1)[1]
@@ -94,7 +104,7 @@ def string_constrained(logits: list[float],
         for q in quotations:
             if q not in res:
                 tokens.extend(model.encode(q)[0].tolist())
-    elif current_parameter in ("regex", "replacement") :
+    elif current_parameter in ("regex", "replacement"):
         return logits
     else:
         for i in prompt.split():
@@ -102,7 +112,13 @@ def string_constrained(logits: list[float],
                 tokens.extend(model.encode(i)[0].tolist())
     return get_masked_logits(logits, tokens)
 
-def value_constrainer(function: FunctionDefinition, logits: list[float], prompt: str, output: str):
+
+def value_constrainer(
+    function: FunctionDefinition,
+    logits: list[float],
+    prompt: str,
+    output: str,
+) -> list[float]:
     current_parameter = get_current_parameter(output, function)
     if current_parameter is None:
         return logits

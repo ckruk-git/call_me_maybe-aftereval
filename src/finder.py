@@ -1,28 +1,28 @@
-from pydantic import BaseModel
 from .parser import parse_args
-import json, sys
+import json
 import numpy as np
-import re
-from .model import model, FunctionDefinition, get_masked_logits
+from .model import model, FunctionDefinition
 from .constrainers import constrainer
-from .utils import key_complited, nbr_left_parameters, get_current_parameter, bracket_validator
+from .utils import (key_complited,
+                    nbr_left_parameters,
+                    bracket_validator)
 
 
 args = parse_args()
-
 with open(args.functions_definition, "r") as f1:
     raw_functions = json.load(f1)
-
 path = model.get_path_to_vocab_file()
 with open(path, encoding="utf-8") as f:
     vocab = json.load(f)
-
 functions = [
     FunctionDefinition.model_validate(function)
     for function in raw_functions
 ]
 
-def choose_function(prompt: str, functions: list[FunctionDefinition]) -> FunctionDefinition:
+
+def choose_function(prompt: str,
+                    functions: list[FunctionDefinition]
+                    ) -> FunctionDefinition:
     big_prompt = "Available functions:\n\n"
     for function in functions:
         big_prompt = big_prompt + function.name + '\n'
@@ -44,6 +44,7 @@ def choose_function(prompt: str, functions: list[FunctionDefinition]) -> Functio
                 return function
     return functions[0]
 
+
 def parameters_request(prompt: str, function: FunctionDefinition) -> str:
     required = list(function.parameters.keys())
     return (
@@ -51,16 +52,19 @@ def parameters_request(prompt: str, function: FunctionDefinition) -> str:
         f"User request is: {prompt}\n"
         f"Function name is {function.name}\n"
         f"Parameters are: {function.parameters}\n"
-        f"List of required keys for which you have to extract values is: {required}.\n"
+        f"List of required keys for which you have to"
+        f"extract values is: {required}.\n"
         "Your task now is to extract values from the request.\n"
         "You have to assign values to the keys and return it as JSON.\n"
         "Return ONLY valid JSON object containing required parameters."
-        "Do not add any additional text beside JSON.\n" \
+        "Do not add any additional text beside JSON.\n"
         "Usually required parameters are in the request\n"
         "Sometimes request may ask you to replace parameter with regex\n"
-        "In such a case you have to find replacement for regex, which is not present in the request\n"
+        "In such a case you have to find replacement for regex,"
+        "which is not present in the request\n"
         "Do not add any additional fields or spaces (before or after JSON)"
-        "Return ONLY the required parameter keys with their values as valid JSON"
+        "Return ONLY the required parameter keys with their"
+        "values as valid JSON"
         "Don't return type of the parameter\n"
         "Only key and value\n"
         "Example of expected output:\n"
@@ -69,10 +73,11 @@ def parameters_request(prompt: str, function: FunctionDefinition) -> str:
         'parameters: {"name": "donkey"}\n'
         "Return the JSON now:")
 
+
 def output_state(
     output: str,
     function: FunctionDefinition,
-) -> str | None:
+) -> str:
     if output == "":
         return "start"
     last = output[-1]
@@ -82,15 +87,20 @@ def output_state(
         return "key_content"
     if output.count('"') % 2 == 1:
         last_occurence = output[output.rfind('"') - 1]
+        print("tutaj")
         if last_occurence == " ":
+            print("tutaj1")
             last_occurence = output[output.rfind('"') - 2]
         if last_occurence == "{" or last_occurence == ",":
+            print("tutaj2")
             if key_complited(output, function) == "complited":
+                print("tutaj3")
                 return "key_end"
             else:
+                print("tutaj4")
                 return "key_content"
     if last == ":" or output[-2] == ":" or last.isdigit():
-            return "value"
+        return "value"
     if output.count('"') % 2 == 0:
         i = output.rfind('"') - 1
         while output[i] != '"':
@@ -98,11 +108,17 @@ def output_state(
         if output[i - 1] == "{" or output[i - 1] == ",":
             return "colon"
     if output.count('"') % 2 == 1:
-        return
+        return "value"
+    if output.count('"') % 2 == 0 and output.count('"') % 4 == 0:
+        if nbr_left_parameters(function, output) != 0:
+            return "coma"
+        return "over"
+    return "value"
+
 
 def find_parameters(prompt: str,
                     function: FunctionDefinition,
-                ) -> dict[str, object]:
+                    ) -> dict[str, object]:
     output = ""
     parameters_prompt = parameters_request(prompt, function)
     input_ids = model.encode(parameters_prompt)

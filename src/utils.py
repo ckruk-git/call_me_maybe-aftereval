@@ -1,5 +1,6 @@
 from .model import FunctionDefinition
 
+
 def left_parameters(
     function: FunctionDefinition,
     output: str,
@@ -10,6 +11,7 @@ def left_parameters(
             return parameter
     return '"'
 
+
 def nbr_left_parameters(
     function: FunctionDefinition,
     output: str,
@@ -17,8 +19,9 @@ def nbr_left_parameters(
     nbr = 0
     for parameter in function.parameters:
         if parameter not in output:
-            nbr +=1
+            nbr += 1
     return nbr
+
 
 def get_current_parameter(
     output: str,
@@ -32,12 +35,12 @@ def get_current_parameter(
             return last
     return last
 
+
 def bracket_validator(s: str) -> bool:
     pairs = {')': '(',
              ']': '[',
              '}': '{'}
     stack = []
-    
     for char in s:
         if char in pairs.values():
             stack.append(char)
@@ -46,6 +49,7 @@ def bracket_validator(s: str) -> bool:
                 return False
             stack.pop()
     return len(stack) == 0
+
 
 def key_complited(output, function):
     key = output.split('"')[-1]
