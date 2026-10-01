@@ -31,6 +31,7 @@ if __name__ == "__main__":
             "name": name.name,
             "parameters": parameters
             })
+        print(prompt)
         print(parameters)
         i += 1
     with open(args.output, "w", encoding="utf-8") as f:

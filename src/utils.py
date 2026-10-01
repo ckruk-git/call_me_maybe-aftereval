@@ -1,18 +1,29 @@
-def left_parameters(function, output):
+from .model import FunctionDefinition
+
+def left_parameters(
+    function: FunctionDefinition,
+    output: str,
+) -> str:
     for parameter in function.parameters:
         print("Parameter:", parameter)
         if parameter not in output:
             return parameter
     return '"'
 
-def nbr_left_parameters(function, output):
+def nbr_left_parameters(
+    function: FunctionDefinition,
+    output: str,
+) -> int:
     nbr = 0
     for parameter in function.parameters:
         if parameter not in output:
             nbr +=1
     return nbr
 
-def get_current_parameter(output, function):
+def get_current_parameter(
+    output: str,
+    function: FunctionDefinition,
+) -> str | None:
     last = None
     for parameter in function.parameters:
         if parameter in output:

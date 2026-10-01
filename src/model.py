@@ -1,8 +1,25 @@
 from llm_sdk import Small_LLM_Model
+import numpy as np
+from pydantic import BaseModel
+
+class ParameterDefinition(BaseModel):
+    type: str
+
+class ReturnDefinition(BaseModel):
+    type: str
+
+class FunctionDefinition(BaseModel):
+    name: str
+    description: str
+    parameters: dict[str, ParameterDefinition]
+    returns: ReturnDefinition
 
 model = Small_LLM_Model()
 
-def get_masked_logits(logits, allowed_tokens) -> list[float]:
+def get_masked_logits(
+    logits: list[float],
+    allowed_tokens: list[int],
+) -> list[float]:
     copy = np.array(logits, copy=True)
     mask = np.full(copy.shape, -np.inf)
 

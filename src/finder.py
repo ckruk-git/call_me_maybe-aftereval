@@ -3,19 +3,9 @@ from .parser import parse_args
 import json, sys
 import numpy as np
 import re
-from .model import model
-
-class ParameterDefinition(BaseModel):
-    type: str
-
-class ReturnDefinition(BaseModel):
-    type: str
-
-class FunctionDefinition(BaseModel):
-    name: str
-    description: str
-    parameters: dict[str, ParameterDefinition]
-    returns: ReturnDefinition
+from .model import model, FunctionDefinition, get_masked_logits
+from .constrainers import constrainer
+from .utils import key_complited, nbr_left_parameters, get_current_parameter, bracket_validator
 
 
 args = parse_args()
@@ -54,7 +44,7 @@ def choose_function(prompt: str, functions: list[FunctionDefinition]) -> Functio
                 return function
     return functions[0]
 
-def parameters_request(prompt: str, function: dict):
+def parameters_request(prompt: str, function: FunctionDefinition) -> str:
     required = list(function.parameters.keys())
     return (
         "You are an engine to extract parameters from user request.\n"
@@ -79,7 +69,10 @@ def parameters_request(prompt: str, function: dict):
         'parameters: {"name": "donkey"}\n'
         "Return the JSON now:")
 
-def output_state(output: str, function):
+def output_state(
+    output: str,
+    function: FunctionDefinition,
+) -> str | None:
     if output == "":
         return "start"
     last = output[-1]
@@ -107,7 +100,9 @@ def output_state(output: str, function):
     if output.count('"') % 2 == 1:
         return
 
-def find_parameters(prompt, function) -> json:
+def find_parameters(prompt: str,
+                    function: FunctionDefinition,
+                ) -> dict[str, object]:
     output = ""
     parameters_prompt = parameters_request(prompt, function)
     input_ids = model.encode(parameters_prompt)

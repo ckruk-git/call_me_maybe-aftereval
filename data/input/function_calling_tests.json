@@ -3,7 +3,7 @@
     "prompt": "Replace all numbers in \"Hello 34 I'm 233 years old\" with NUMBERS"
   },
   {
-    "prompt": "Replace all \n\"C:\\home\"vowels in 'Programming is fun' with asterisks"
+    "prompt": "Replace all vowels in 'Programming is fun' with asterisks"
   },
   {
     "prompt": "Substitute the word 'cat' with 'dog' in 'The cat sat on the mat with another cat'"
@@ -21,13 +21,13 @@
     "prompt": "Reverse the string 'world'"
   },
   {
-    "prompt": "What is the square root of 16?"
+    "prompt": "What is the square root of 17?"
   },
   {
     "prompt": "Calculate the square root of 144"
   },
     {
-    "prompt": "What is the sum of 2 and 3?"
+    "prompt": "What is the sum of 2 and 4?"
   },
   {
     "prompt": "What is the sum of 265 and 345?"
