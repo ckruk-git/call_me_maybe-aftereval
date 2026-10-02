@@ -2,6 +2,7 @@ from .utils import get_current_parameter, left_parameters
 from .model import model, get_masked_logits, FunctionDefinition
 import re
 from .finder import output_state
+from typing import Any
 
 
 def constrainer(
@@ -9,7 +10,7 @@ def constrainer(
     logits: list[float],
     function: FunctionDefinition,
     prompt: str,
-        ) -> list[float]:
+        ) -> Any:
     state = output_state(output, function)
     print("STATE:", state)
     tokens = []
@@ -34,6 +35,7 @@ def constrainer(
         return get_masked_logits(logits, tokens)
     if state == "value":
         return value_constrainer(function, logits, prompt, output)
+    return "error"
 
 
 def ints_constrained(
@@ -41,15 +43,15 @@ def ints_constrained(
         prompt: str,
         output: str,
         function: FunctionDefinition,
-        ) -> list[float]:
+        ) -> Any:
     tokens = []
     res = output.split(":", 1)[0]
-    prompt = prompt.split()
+    prompt_splited = prompt.split()
     allowed = ['}']
     current_parameter = get_current_parameter(output, function)
     if current_parameter != list(function.parameters.keys())[-1]:
         allowed.extend(",")
-    for i in prompt:
+    for i in prompt_splited:
         numbers = re.findall(r'\d+', i)
         if numbers:
             allowed.extend(numbers)
@@ -60,20 +62,20 @@ def ints_constrained(
     return get_masked_logits(logits, tokens)
 
 
-def floats_constrained(logits: list[float], prompt: str) -> list[float]:
-    prompt = prompt.split()
+def floats_constrained(logits: list[float], prompt: str) -> Any:
+    prompt_splited = prompt.split()
     allowed = ["}", ",", "-", ".", " "]
     for i in range(10):
         allowed.append(str(i))
     tokens = []
-    for i in allowed:
+    for token in allowed:
         tokens.append(model.encode(i)[0].tolist()[0])
-    for i in prompt:
+    for token in prompt_splited:
         tokens.extend(model.encode(i)[0].tolist())
     return get_masked_logits(logits, tokens)
 
 
-def bool_constrained(logits: list[float]) -> list[float]:
+def bool_constrained(logits: list[float]) -> Any:
     allowed = ["true", "false", "}", "'", " "]
     tokens = []
     for i in allowed:
@@ -86,7 +88,7 @@ def string_constrained(
         prompt: str,
         output: str,
         function: FunctionDefinition,
-        ) -> list[float]:
+        ) -> Any:
     current_parameter = get_current_parameter(output, function)
     tokens = []
     res = output.rsplit(":", 1)[1]
@@ -118,7 +120,7 @@ def value_constrainer(
     logits: list[float],
     prompt: str,
     output: str,
-) -> list[float]:
+) -> Any:
     current_parameter = get_current_parameter(output, function)
     if current_parameter is None:
         return logits

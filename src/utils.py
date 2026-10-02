@@ -1,10 +1,11 @@
 from .model import FunctionDefinition
+from typing import Any
 
 
 def left_parameters(
     function: FunctionDefinition,
     output: str,
-) -> str:
+) -> Any:
     for parameter in function.parameters:
         print("Parameter:", parameter)
         if parameter not in output:
@@ -51,7 +52,7 @@ def bracket_validator(s: str) -> bool:
     return len(stack) == 0
 
 
-def key_complited(output, function):
+def key_complited(output: str, function: FunctionDefinition) -> str:
     key = output.split('"')[-1]
     for parameter in function.parameters:
         if parameter == key:

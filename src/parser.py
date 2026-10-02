@@ -1,7 +1,8 @@
 import argparse
+from typing import Any
 
 
-def parse_args():
+def parse_args() -> Any:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--functions_definition",
