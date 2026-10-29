@@ -2,6 +2,9 @@ import argparse
 from typing import Any
 
 
+def json_checker() -> Any:
+    
+
 def parse_args() -> Any:
     parser = argparse.ArgumentParser()
     parser.add_argument(
