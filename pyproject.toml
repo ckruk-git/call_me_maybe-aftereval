@@ -10,9 +10,6 @@ author = [
 dependencies = [
     "numpy>=2.2.6",
     "pydantic>=2.13.4",
-    "torch>=2.0.0",
-    "transformers>=4.40.0",
-    "huggingface-hub>=0.20.0",
 ]
 
 [build-system]

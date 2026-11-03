@@ -1,50 +1,20 @@
-from .parser import parse_args
 import json
 import numpy as np
 from typing import Any
 from llm_sdk import Small_LLM_Model
 from pydantic import BaseModel
 import re
+from .model import FunctionDefinition, model, get_masked_logits
 
 
-class ParameterDefinition(BaseModel):
-    type: str
-
-
-class ReturnDefinition(BaseModel):
-    type: str
-
-
-class FunctionDefinition(BaseModel):
-    name: str
-    description: str
-    parameters: dict[str, ParameterDefinition]
-    returns: ReturnDefinition
-
-
-model = Small_LLM_Model()
-
-args = parse_args()
-with open(args.functions_definition, "r") as f1:
-    raw_functions = json.load(f1)
-path = model.get_path_to_vocab_file()
-with open(path, encoding="utf-8") as f:
-    vocab = json.load(f)
-functions = [
-    FunctionDefinition.model_validate(function)
-    for function in raw_functions
-]
-
-
-def get_masked_logits(
-    logits: list[float],
-    allowed_tokens: list[int],
-) -> list[float]:
-    copy = np.array(logits, copy=True)
-    mask = np.full(copy.shape, -np.inf)
-
-    mask[allowed_tokens] = copy[allowed_tokens]
-    return list(mask)
+def load_functions(path: str) -> list[FunctionDefinition]:
+    with open(path, "r") as f1:
+        raw_functions = json.load(f1)
+    functions = [
+        FunctionDefinition.model_validate(function)
+        for function in raw_functions
+    ]
+    return functions
 
 
 def choose_function(prompt: str,
@@ -151,6 +121,8 @@ def parameters_request(prompt: str, function: FunctionDefinition) -> str:
         "values as valid JSON"
         "Don't return type of the parameter\n"
         "Only key and value\n"
+        "Numbers convert to float. For example: if the prompt is 'Hi I am 13 years old' -"
+        "make it 'Hi I am 13.0 years old\n'"
         "Example of expected output:\n"
         'prompt: "Greet donkey"\n'
         'name: "fn_greet"\n'
@@ -161,11 +133,14 @@ def parameters_request(prompt: str, function: FunctionDefinition) -> str:
 def output_state(
     output: str,
     function: FunctionDefinition,
+    prompt: str
 ) -> str:
     if output == "":
         return "start"
     last = output[-1]
     if last == "{" or last == ",":
+        if nbr_left_parameters(function, output) == 0:
+            return "over"
         return "key_start"
     if last == '"' and output.count('"') == 1:
         return "key_content"
@@ -178,7 +153,15 @@ def output_state(
                 return "key_end"
             else:
                 return "key_content"
-    if last == ":" or output[-2] == ":" or last.isdigit():
+    if last == "." and output[-2].isdigit():
+        return "value"
+    if last == "0" and output[-2] == "." and function.parameters[get_current_parameter(output, function)].type == "number":
+        if nbr_left_parameters(function, output) == 0:
+            return "over"
+        return "coma"
+    if last == ":" or output[-2] == ":":
+        return "value"
+    if last.isdigit() and function.parameters[get_current_parameter(output, function)].type == "number":
         return "value"
     if output.count('"') % 2 == 0:
         i = output.rfind('"') - 1
@@ -228,7 +211,7 @@ def constrainer(
     function: FunctionDefinition,
     prompt: str,
         ) -> Any:
-    state = output_state(output, function)
+    state = output_state(output, function, prompt)
     tokens = []
     if state == "start":
         tokens.append(model.encode('{')[0].tolist()[0])
@@ -251,7 +234,7 @@ def constrainer(
         return get_masked_logits(logits, tokens)
     if state == "value":
         return value_constrainer(function, logits, prompt, output)
-    return "error"
+    return logits
 
 
 def ints_constrained(
@@ -263,10 +246,18 @@ def ints_constrained(
     tokens = []
     res = output.split(":", 1)[0]
     prompt_splited = prompt.split()
-    allowed = ['}']
+    allowed = ["-", ".", " ", "}", "0"]
     current_parameter = get_current_parameter(output, function)
     if current_parameter != list(function.parameters.keys())[-1]:
         allowed.extend(",")
+    if output[-1] == "." and output[-2].isdigit():
+        found = False
+        for i in range(1, len(prompt) - 1):
+            if (prompt[i] == "." and prompt[i - 1].isdigit() and prompt[i + 1].isdigit()):
+                found = True
+        if found == False:
+            token_0 = model.encode("0")[0].tolist()[0]
+            return get_masked_logits(logits, [token_0])
     for i in prompt_splited:
         numbers = re.findall(r'\d+', i)
         if numbers:
@@ -277,27 +268,13 @@ def ints_constrained(
     return get_masked_logits(logits, tokens)
 
 
-def floats_constrained(logits: list[float], prompt: str) -> Any:
-    prompt_splited = prompt.split()
-    allowed = ["}", ",", "-", ".", " "]
-    for i in range(10):
-        allowed.append(str(i))
-    tokens = []
-    for token in allowed:
-        tokens.append(model.encode(token)[0].tolist()[0])
-    for token in prompt_splited:
-        tokens.extend(model.encode(token)[0].tolist())
-    return get_masked_logits(logits, tokens)
-
-
 def bool_constrained(logits: list[float]) -> Any:
-    allowed = ["true", "false", "}", "'", " "]
+    allowed = ["true", "false", "}", ","]
     tokens = []
     for i in allowed:
         tokens.append(model.encode(i)[0].tolist()[0])
     return get_masked_logits(logits, tokens)
-
-
+    
 def string_constrained(
         logits: list[float],
         prompt: str,
@@ -321,7 +298,7 @@ def string_constrained(
         for q in quotations:
             if q not in res:
                 tokens.extend(model.encode(q)[0].tolist())
-    elif current_parameter in ("regex", "replacement"):
+    elif current_parameter in ("replacement", "regex"):
         return logits
     else:
         for i in prompt.split():
@@ -342,8 +319,6 @@ def value_constrainer(
     param_type = function.parameters[current_parameter].type
     if param_type == "number":
         return ints_constrained(logits, prompt, output, function)
-    if param_type == "float":
-        return floats_constrained(logits, prompt)
     if param_type == "bool":
         return bool_constrained(logits)
     if param_type == "string":

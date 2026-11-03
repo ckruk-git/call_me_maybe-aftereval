@@ -25,6 +25,8 @@ def get_masked_logits(
     logits: list[float],
     allowed_tokens: list[int],
 ) -> list[float]:
+    if not allowed_tokens:
+        return logits
     copy = np.array(logits, copy=True)
     mask = np.full(copy.shape, -np.inf)
 

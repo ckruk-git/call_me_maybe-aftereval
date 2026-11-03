@@ -1,12 +1,9 @@
 [
   {
-    "prompt": "Replace all numbers in \"Hello 34 I'm 233 years old\" with NUMBERS"
+    "prompt": "What is the sum of 2.5 and 3?"
   },
   {
-    "prompt": "Replace all vowels in 'Programming is fun' with asterisks"
-  },
-  {
-    "prompt": "Substitute the word 'cat' with 'dog' in 'The cat sat on the mat with another cat'"
+    "prompt": "What is the sum of 265.0 and 345.345?"
   },
   {
     "prompt": "Greet shrek"
@@ -21,15 +18,18 @@
     "prompt": "Reverse the string 'world'"
   },
   {
-    "prompt": "What is the square root of 17?"
+    "prompt": "What is the square root of 16?"
   },
   {
     "prompt": "Calculate the square root of 144"
   },
-    {
-    "prompt": "What is the sum of 2 and 4?"
+  {
+    "prompt": "Replace all numbers in \"Hello 34 I'm 233 years old\" with NUMBERS"
   },
   {
-    "prompt": "What is the sum of 265 and 345?"
+    "prompt": "Replace all vowels in 'Programming is fun' with asterisks"
+  },
+  {
+    "prompt": "Substitute the word 'cat' with 'dog' in 'The cat sat on the mat with another cat'"
   }
 ]

@@ -1,29 +1,18 @@
 [
     {
-        "prompt": "Replace all numbers in \"Hello 34 I'm 233 years old\" with NUMBERS",
-        "name": "fn_substitute_string_with_regex",
+        "prompt": "What is the sum of 2.5 and 3?",
+        "name": "fn_add_numbers",
         "parameters": {
-            "source_string": "Hello 34 I'm 233 years old",
-            "regex": "34",
-            "replacement": "233"
+            "a": 2.5,
+            "b": 3.0
         }
     },
     {
-        "prompt": "Replace all vowels in 'Programming is fun' with asterisks",
-        "name": "fn_substitute_string_with_regex",
+        "prompt": "What is the sum of 265.0 and 345.345?",
+        "name": "fn_add_numbers",
         "parameters": {
-            "source_string": "Programming is fun",
-            "regex": ".*[aeiouAEIOU]",
-            "replacement": "*"
-        }
-    },
-    {
-        "prompt": "Substitute the word 'cat' with 'dog' in 'The cat sat on the mat with another cat'",
-        "name": "fn_substitute_string_with_regex",
-        "parameters": {
-            "source_string": "The cat sat on the mat with another cat",
-            "regex": "cat",
-            "replacement": "dog"
+            "a": 265.0,
+            "b": 345.345
         }
     },
     {
@@ -55,33 +44,44 @@
         }
     },
     {
-        "prompt": "What is the square root of 17?",
+        "prompt": "What is the square root of 16?",
         "name": "fn_get_square_root",
         "parameters": {
-            "a": 17
+            "a": 16.0
         }
     },
     {
         "prompt": "Calculate the square root of 144",
         "name": "fn_get_square_root",
         "parameters": {
-            "a": 144
+            "a": 144.0
         }
     },
     {
-        "prompt": "What is the sum of 2 and 4?",
-        "name": "fn_add_numbers",
+        "prompt": "Replace all numbers in \"Hello 34 I'm 233 years old\" with NUMBERS",
+        "name": "fn_substitute_string_with_regex",
         "parameters": {
-            "a": 2,
-            "b": 4
+            "source_string": "Hello 34 I'm 233 years old",
+            "regex": "3[0-9]+",
+            "replacement": "13.0"
         }
     },
     {
-        "prompt": "What is the sum of 265 and 345?",
-        "name": "fn_add_numbers",
+        "prompt": "Replace all vowels in 'Programming is fun' with asterisks",
+        "name": "fn_substitute_string_with_regex",
         "parameters": {
-            "a": 265,
-            "b": 345
+            "source_string": "Programming is fun",
+            "regex": ".*[aeiouAEIOU]*",
+            "replacement": "*"
+        }
+    },
+    {
+        "prompt": "Substitute the word 'cat' with 'dog' in 'The cat sat on the mat with another cat'",
+        "name": "fn_substitute_string_with_regex",
+        "parameters": {
+            "source_string": "The cat sat on the mat with another cat",
+            "regex": "cat",
+            "replacement": "dog"
         }
     }
 ]

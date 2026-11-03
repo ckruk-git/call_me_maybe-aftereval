@@ -45,13 +45,13 @@ Reliability: Guarantees syntactically valid JSON output on every run because inv
 
 ### Challenges faced
 
-Model was trying to answer the question asked in the prompt, insted of pulling parameters from it. I solved it by giving it acces to use only tokens appearing in the prompt
+Model was trying to answer the question asked in the prompt, insted of pulling parameters from it. I solved it by giving it acces to use only tokens appearing in the prompt.
 
 ### Testing strategy
 
-Test was based on modifying prompts to make it more tricky and difficult
+Test was based on modifying prompts to make it more tricky and difficult.
 
-• Example usage: Provide clear examples of running your program
+### Example usage
 
 ### Compilation
 
